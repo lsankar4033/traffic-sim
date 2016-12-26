@@ -14,7 +14,7 @@
 
 import random
 
-from collections import namedtuple
+from collections import defaultdict,namedtuple
 from itertools import count, islice
 
 Params = namedtuple('Params', 'num_cars v_0 v_jitter v_max t_spacing_0 t_spacing_min acc_neg acc_pos')
@@ -35,8 +35,8 @@ def combine_data(data1, data2):
 TIME_STEP = 1.0
 
 def simulate(params, num_steps):
-    state = build_init_state(params.num_cars, params.v_0, params.t_spacing_0)
-    data = SimData([], [], [], [])
+    # TODO - collect first data point here
+    (state, data) = initialize(params.num_cars, params.v_0, params.t_spacing_0)
 
     for i in range(num_steps):
         (state, new_data) = simulate_step(state,
@@ -79,37 +79,78 @@ def set_accelerations(state, v_max, t_spacing_min, acc_neg, acc_pos):
     return state._replace(accs = new_accs)
 
 # dx = vdt + (1/2) * a(dt^2)
-def calculate_dx(v, a, dt):
-    return v * dt + (a * (dt ** 2)) / 2
+def calculate_dx(v, a):
+    return v * TIME_STEP + (a * (TIME_STEP ** 2)) / 2
 
-# TODO - test
+def consolidate_collisions(collision_pairs):
+    """Turn a list of collision tuples into a list of sets consisting of all 'connected' collisions
+    """
+    collision_map = {}
+    for (i,j) in collision_pairs:
+        if i not in collision_map and j not in collision_map:
+            cs = set([i, j])
+            collision_map[i] = cs
+            collision_map[j] = cs
+
+        elif i not in collision_map:
+            collision_map[j].add(i)
+            collision_map[i] = collision_map[j]
+
+        elif j not in collision_map:
+            collision_map[i].add(j)
+            collision_map[j] = collision_map[i]
+
+        else:
+            collision_map[j].add(i)
+            collision_map[i].add(j)
+
+    collisions = []
+    seen_indices = set()
+    for (i, collision) in collision_map.items():
+        if i not in seen_indices:
+            collisions.append(collision)
+            seen_indices |= collision
+
+    return collisions
+
 def step_time(state):
-    data = SimData([], [], [], [])
+    """Steps the provided total state by one TIME_STEP and collects all simulation data.
 
-    # determine where each car would go without obstacles
-    projected_xs = [state.xs[i] + calculate_dx(state.vs[i], state.accs[i], TIME_STEP)
+    Return value is a tuple of (new_state, data)
+    """
+    # determine each car's final motion assuming no collisions
+    projected_xs = [state.xs[i] + calculate_dx(state.vs[i], state.accs[i])
                     for i in range(len(state.xs))]
+    projected_vs = [state.vs[i] + state.accs[i] * TIME_STEP
+                    for i in range(len(state.vs))]
 
     # account for collisions
-    new_vs = state.vs.copy()
+    new_vs = projected_vs.copy()
     new_xs = projected_xs.copy()
+    new_accs = state.accs.copy()
+    collision_pairs = []
     for i in reversed(range(len(state.xs) - 1)):
         if new_xs[i] > new_xs[i+1]:
             new_xs[i] = new_xs[i+1]
-            new_vs[i] = 0
-            data.collisions.append(set([i, i+1]))
-    new_state = state._replace(xs = new_xs, vs = new_vs)
+            new_vs[i] = 0.0
+            new_accs[i] = 0.0
 
-    # TODO consolidate collisions
+            collision_pairs.append((i, i+1))
+    new_state = state._replace(xs = new_xs, vs = new_vs, accs = new_accs)
 
-    # record non-collision data
-    data.xs = state.xs
-    data.vs = state.vs
-    data.accs = state.accs
+    # record data
+    data = SimData(new_state.xs,
+                   new_state.vs,
+                   new_state.accs,
+                   consolidate_collisions(collision_pairs))
 
     return (new_state, data)
 
-def build_init_state(num_cars, v_0, t_spacing_0):
+def initialize(num_cars, v_0, t_spacing_0):
     x_spacing_0 = v_0 * t_spacing_0
     xs = list(islice(count(0, x_spacing_0), num_cars))
-    return SimState(xs, [v_0] * num_cars, [0] * num_cars)
+    vs = [v_0] * num_cars
+    accs = [0] * num_cars
+    state = SimState(xs, vs, accs)
+    data = SimData(xs, vs, accs, [])
+    return (state, data)
