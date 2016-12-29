@@ -138,10 +138,10 @@ def step_time(state):
     new_state = state._replace(xs = new_xs, vs = new_vs, accs = new_accs)
 
     # record data
-    data = SimData(new_state.xs,
-                   new_state.vs,
-                   new_state.accs,
-                   consolidate_collisions(collision_pairs))
+    data = SimData([new_state.xs],
+                   [new_state.vs],
+                   [new_state.accs],
+                   [consolidate_collisions(collision_pairs)])
 
     return (new_state, data)
 
@@ -151,5 +151,5 @@ def initialize(num_cars, v_0, t_spacing_0):
     vs = [v_0] * num_cars
     accs = [0] * num_cars
     state = SimState(xs, vs, accs)
-    data = SimData(xs, vs, accs, [])
+    data = SimData([xs], [vs], [accs], [[]])
     return (state, data)
