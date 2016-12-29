@@ -35,7 +35,6 @@ def combine_data(data1, data2):
 TIME_STEP = 1.0
 
 def simulate(params, num_steps):
-    # TODO - collect first data point here
     (state, data) = initialize(params.num_cars, params.v_0, params.t_spacing_0)
 
     for i in range(num_steps):
@@ -47,7 +46,7 @@ def simulate(params, num_steps):
                                           params.acc_pos)
         data = combine_data(data, new_data)
 
-    return []
+    return data
 
 def simulate_step(state, v_jitter, v_max, t_spacing_min, acc_neg, acc_pos):
     state = jitter_velocities(state, v_jitter)
