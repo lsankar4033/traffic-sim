@@ -22,6 +22,7 @@ Params = namedtuple('Params', 'num_cars v_0 v_jitter v_max t_spacing_0 t_spacing
 # displacements, velocities, accelerations
 SimState = namedtuple('SimState', 'xs vs accs')
 
+# TODO - decide if these should be storing lists of lists as they are now
 # Represents the returned simulation data
 SimData = namedtuple('SimData', 'xs vs accs collisions')
 
@@ -117,10 +118,10 @@ def step_time(state):
 
     Return value is a tuple of (new_state, data)
     """
-    # determine each car's final motion assuming no collisions
     projected_xs = [state.xs[i] + calculate_dx(state.vs[i], state.accs[i])
                     for i in range(len(state.xs))]
-    projected_vs = [state.vs[i] + state.accs[i] * TIME_STEP
+    # velocities should never drop below 0
+    projected_vs = [max(state.vs[i] + state.accs[i] * TIME_STEP, 0.0)
                     for i in range(len(state.vs))]
 
     # account for collisions
