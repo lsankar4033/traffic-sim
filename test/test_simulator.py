@@ -7,7 +7,7 @@ class TestInitialize(unittest.TestCase):
     def test_simple(self):
         self.assertEqual(initialize(2, 1, 1),
                          (SimState([0, 1], [1, 1], [0, 0]),
-                          SimData([0, 1], [1, 1], [0, 0], [])))
+                          SimData([[0, 1]], [[1, 1]], [[0, 0]], [[]])))
 
 class TestAcceleration(unittest.TestCase):
     def test_no_accelerations(self):
@@ -74,7 +74,7 @@ class TestStepTime(unittest.TestCase):
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, accs),
-                          SimData(new_xs, new_vs, new_accs, [])))
+                          SimData([new_xs], [new_vs], [new_accs], [[]])))
 
     def test_single_collision(self):
         xs = [0, 1]
@@ -89,7 +89,7 @@ class TestStepTime(unittest.TestCase):
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, new_accs),
-                          SimData(new_xs, new_vs, new_accs, [set([0, 1])])))
+                          SimData([new_xs], [new_vs], [new_accs], [[set([0, 1])]])))
 
     def test_multi_collision(self):
         xs = [0, 1, 1.5]
@@ -107,4 +107,8 @@ class TestStepTime(unittest.TestCase):
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, accs),
-                          SimData(new_xs, new_vs, new_accs, [set([0, 1, 2])])))
+                          SimData([new_xs], [new_vs], [new_accs], [[set([0, 1, 2])]])))
+
+    def test_nonnegative_velocities(self):
+        (state, _) = step_time(SimState([0], [1], [-10]))
+        self.assertEqual(state.vs[0], 0.0)
