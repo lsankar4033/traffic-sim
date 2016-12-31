@@ -53,24 +53,15 @@ class TestConsolidateCollisions(unittest.TestCase):
             same_collisions(consolidate_collisions(collision_pairs),
                             [{1, 2, 3}, {4, 5}]))
 
-# NOTE - these methods are dependent on our kinematics model
-def compute_new_xs(xs, vs, accs):
-    return [xs[i] + vs[i] * TIME_STEP + (accs[i] * (TIME_STEP ** 2)) / 2
-            for i in range(len(xs))]
-
-def compute_new_vs(vs, accs):
-    return [vs[i] + accs[i] * TIME_STEP
-            for i in range(len(vs))]
-
-# TODO - make it easier to specify these test fixtures
 class TestStepTime(unittest.TestCase):
     def test_no_collisions(self):
         xs = [0, 5]
         vs = [1, 1]
         accs = [2, 2]
-        new_xs = compute_new_xs(xs, vs, accs)
-        new_vs = compute_new_vs(vs, accs)
-        new_accs = accs
+
+        new_xs = [2, 7]
+        new_vs = [3, 3]
+        new_accs = [2, 2]
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, accs),
@@ -80,12 +71,10 @@ class TestStepTime(unittest.TestCase):
         xs = [0, 1]
         vs = [1, 0]
         accs = [2, 0]
-        new_xs = compute_new_xs(xs, vs, accs)
-        new_xs[0] = 1.0
-        new_vs = compute_new_vs(vs, accs)
-        new_vs[0] = 0.0
-        new_accs = accs.copy()
-        new_accs[0] = 0.0
+
+        new_xs = [1, 1]
+        new_vs = [0, 0]
+        new_accs = [0, 0]
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, new_accs),
@@ -95,15 +84,10 @@ class TestStepTime(unittest.TestCase):
         xs = [0, 1, 1.5]
         vs = [2, 1, 0]
         accs = [0, 0, 0]
-        new_xs = compute_new_xs(xs, vs, accs)
-        new_xs[0] = 1.5
-        new_xs[1] = 1.5
-        new_vs = compute_new_vs(vs, accs)
-        new_vs[0] = 0.0
-        new_vs[1] = 0.0
-        new_accs = accs.copy()
-        new_accs[0] = 0.0
-        new_accs[1] = 0.0
+
+        new_xs = [1.5, 1.5, 1.5]
+        new_vs = [0, 0, 0]
+        new_accs = [0, 0, 0]
 
         self.assertEqual(step_time(SimState(xs, vs, accs)),
                          (SimState(new_xs, new_vs, accs),
