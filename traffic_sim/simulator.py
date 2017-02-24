@@ -20,6 +20,9 @@ def combine_data(data1, data2):
 TIME_STEP = 1.0
 
 def simulate(params, num_steps):
+    """Main entry point of this module. This method will simulate traffic on a single lane one way road using
+    the specified parameters for the specified number of time steps.
+    """
     (state, data) = initialize(params.num_cars, params.v_0, params.t_spacing_0)
 
     for i in range(num_steps):
@@ -39,15 +42,18 @@ def simulate_step(state, v_jitter, v_max, t_spacing_min, acc_neg, acc_pos):
     return step_time(state)
 
 def jitter_velocities(state, v_jitter):
-    new_vs = [v + random.gauss(0, v_jitter) for v in state.vs]
+    new_vs = [max(v + random.gauss(0, v_jitter), 0.0) for v in state.vs]
     return state._replace(vs = new_vs)
 
 def set_accelerations(state, v_max, t_spacing_min, acc_neg, acc_pos):
     new_accs = []
 
     for i in range(len(state.vs) - 1):
-        t_spacing = (state.xs[i+1] - state.xs[i]) / state.vs[i]
-        if t_spacing <= t_spacing_min:
+        if state.vs[i] == 0 and state.xs[i+1] == state.xs[i]:
+            new_accs.append(0)
+        elif state.vs[i] == 0:
+            new_accs.append(acc_pos)
+        elif (state.xs[i+1] - state.xs[i]) / state.vs[i] <= t_spacing_min:
             new_accs.append(acc_neg)
         elif state.vs[i] < v_max:
             new_accs.append(acc_pos)
@@ -64,7 +70,7 @@ def set_accelerations(state, v_max, t_spacing_min, acc_neg, acc_pos):
 
 # dx = vdt + (1/2) * a(dt^2)
 def calculate_dx(v, a):
-    return v * TIME_STEP + (a * (TIME_STEP ** 2)) / 2
+    return max(v * TIME_STEP + (a * (TIME_STEP ** 2)) / 2, 0.0)
 
 def consolidate_collisions(collision_pairs):
     """Turn a list of collision tuples into a list of sets consisting of all 'connected' collisions
