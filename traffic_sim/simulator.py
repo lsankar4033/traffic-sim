@@ -1,17 +1,3 @@
-# First order model for traffic simulation. The goal is to get something simple working so that I can practice
-# plotting the data via Jupyter.
-
-# TODO A quick realism improvement would be to change collision detection to if a car is within 'car_distance' of
-# the car in front of it.
-
-# 2 presents a bit of a problem above because if there are a sequence of cars decelerating, won't they crash?
-# Additionally, the current model assumes singular acceleration changes. Humans change acceleration
-# continuously...
-# I should probably put thought into a more complicated model of deceleration.
-# TODO - more complicated model of deceleration
-
-# TODO Cars could respond to cars behind them as well
-
 import random
 
 from collections import defaultdict,namedtuple
@@ -22,7 +8,6 @@ Params = namedtuple('Params', 'num_cars v_0 v_jitter v_max t_spacing_0 t_spacing
 # displacements, velocities, accelerations
 SimState = namedtuple('SimState', 'xs vs accs')
 
-# TODO - decide if these should be storing lists of lists as they are now
 # Represents the returned simulation data
 SimData = namedtuple('SimData', 'xs vs accs collisions')
 
@@ -32,7 +17,6 @@ def combine_data(data1, data2):
                    data1.accs + data2.accs,
                    data1.collisions + data2.collisions)
 
-# TODO - see how changing this number affects things
 TIME_STEP = 1.0
 
 def simulate(params, num_steps):
