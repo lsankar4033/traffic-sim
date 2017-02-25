@@ -12,6 +12,8 @@ traffic. We attributed this periodicity the following related phenomena:
 However, the question remained of what this periodicity *looked like* in the typical case. Is it a simple
 harmonic oscillator? A sawtooth? A step function?
 
+And what does the distribution of the period look like? Are there any patterns in its variation over time?
+
 While a closed form solution might exist, this seemed like a very easy thing to examine with simulation.
 
 And so this project was born.
@@ -42,5 +44,6 @@ Simulation results are analyzed in jupyter notebook(s) found in the `notebook/` 
 - show key graph(s) in the README
 - remove all the extraneous notebook code from git
 - fit the displacement curves to actual harmonic oscillators and see how frequency depends on parameters
+- explore variation of period
 - make cars respond to cars behind them
 - (optional) give cars finite size (so collisions don't happen only when points coincide)
